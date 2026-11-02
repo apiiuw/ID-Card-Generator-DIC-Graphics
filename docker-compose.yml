@@ -57,6 +57,7 @@ services:
       MYSQL_DATABASE: dic_idcard_generator
     volumes:
       - id-card-dic-graphics_db_data:/var/lib/mysql
+      - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pdic_graphics_secret"]
       interval: 10s

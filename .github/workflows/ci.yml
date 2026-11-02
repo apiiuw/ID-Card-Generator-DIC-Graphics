@@ -1,0 +1,61 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build & Verify Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Frontend Bundle
+        run: npm run build
+
+      - name: Verify Public Asset Integrity
+        run: |
+          echo "Verifying extracted photos and logos..."
+          test -d dist/extracted_photos
+          test -d dist/logos
+          PHOTOS_COUNT=$(ls -1 dist/extracted_photos | wc -l)
+          LOGOS_COUNT=$(ls -1 dist/logos | wc -l)
+          echo "Found $PHOTOS_COUNT contractor photos and $LOGOS_COUNT logos in production build."
+          if [ "$PHOTOS_COUNT" -eq 0 ]; then
+            echo "Error: No extracted photos found!"
+            exit 1
+          fi
+
+      - name: Validate Backend Syntax
+        run: |
+          node --check server/index.js
+          node --check server/db.js
+          echo "Backend syntax verified."
+
+      - name: Validate Database Init Dump
+        run: |
+          test -f server/init.sql
+          echo "Database dump exists ($(du -h server/init.sql | cut -f1))"
+
+      - name: Validate Docker Build (Frontend & Backend)
+        run: |
+          docker build -t id-card-dic-graphics-app:latest -f Dockerfile .
+          docker build -t id-card-dic-graphics-backend:latest -f Dockerfile.backend .
+          echo "Docker images built successfully."
