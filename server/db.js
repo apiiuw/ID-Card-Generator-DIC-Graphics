@@ -96,7 +96,7 @@ export async function initDatabase() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
-    // 3. Seed User 'admin' / 'PTD1C123?&' if not exists
+    // 3. Seed User 'admin' / 'PTD1C123?&'
     const [existingUsers] = await conn.query('SELECT id FROM users WHERE username = ?', ['admin']);
     if (existingUsers.length === 0) {
       await conn.query(
@@ -104,6 +104,8 @@ export async function initDatabase() {
         ['admin', 'PTD1C123?&', 'Administrator DIC Karawang', 'Administrator K3 & HRD']
       );
       console.log('✅ MySQL: Admin user initialized (admin / PTD1C123?&)');
+    } else {
+      await conn.query('UPDATE users SET password = ? WHERE username = ?', ['PTD1C123?&', 'admin']);
     }
 
     // 4. Seed Default Folders & Cards if folders empty
@@ -215,10 +217,9 @@ export async function initDatabase() {
       console.log('✅ MySQL: Initial folders & cards seeded successfully.');
     }
 
-    // Check if 'folder-krw-terbaru' exists, if not seed it with all 74 cards
+    // Ensure 'folder-krw-terbaru' exists and has all 74 cards
     const [krwFolder] = await conn.query('SELECT id FROM folders WHERE id = "folder-krw-terbaru"');
-    if (krwFolder.length === 0 && fs.existsSync('src/data/allExtractedCards.json')) {
-      const cards = JSON.parse(fs.readFileSync('src/data/allExtractedCards.json', 'utf8'));
+    if (krwFolder.length === 0) {
       await conn.query(
         'INSERT INTO folders (id, name, description) VALUES (?, ?, ?)',
         [
@@ -227,11 +228,23 @@ export async function initDatabase() {
           'Seluruh data 74 ID Card lengkap dari file template ID CARD KONTRAKTOR KRW 26090378-26100414 - Rev 1.xlsx',
         ]
       );
+    }
+
+    const [krwCardCount] = await conn.query('SELECT COUNT(*) AS total FROM cards WHERE folder_id = "folder-krw-terbaru"');
+    const totalKrwCards = krwCardCount[0]?.total || 0;
+    if (totalKrwCards < 74 && fs.existsSync('src/data/allExtractedCards.json')) {
+      console.log(`🌱 MySQL: Seeding 74 contractor cards to folder-krw-terbaru (currently ${totalKrwCards})...`);
+      const cards = JSON.parse(fs.readFileSync('src/data/allExtractedCards.json', 'utf8'));
       for (let i = 0; i < cards.length; i++) {
         const c = cards[i];
         await conn.query(
           `INSERT INTO cards (id, folder_id, title, name, company, id_label, id_number, photo_url, code_format, qr_type, qr_code_url, color_theme, sort_order)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE 
+             title = VALUES(title), name = VALUES(name), company = VALUES(company),
+             id_label = VALUES(id_label), id_number = VALUES(id_number), photo_url = VALUES(photo_url),
+             code_format = VALUES(code_format), qr_type = VALUES(qr_type), qr_code_url = VALUES(qr_code_url),
+             color_theme = VALUES(color_theme), sort_order = VALUES(sort_order)`,
           [
             c.id,
             'folder-krw-terbaru',
@@ -249,7 +262,7 @@ export async function initDatabase() {
           ]
         );
       }
-      console.log(`✅ MySQL: Folder 'ID Card Kontraktor KRW Terbaru' seeded with ${cards.length} cards.`);
+      console.log(`✅ MySQL: Folder 'ID Card Kontraktor KRW Terbaru' synced with ${cards.length} cards.`);
     }
 
     // 5. Seed default settings
