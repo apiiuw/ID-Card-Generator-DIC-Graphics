@@ -1,0 +1,25 @@
+# Backend: Express API (server/index.js) on port 3001
+FROM node:20-slim AS runtime
+
+# Network debug tools (required)
+RUN apt-get update && apt-get install -y wget curl net-tools iputils-ping dnsutils netcat-openbsd && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install production deps only
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# Copy backend source + seed data (db.js reads src/data/allExtractedCards.json)
+COPY server ./server
+COPY src/data ./src/data
+
+# Uploads mount point
+RUN mkdir -p /app/uploads
+
+ENV NODE_ENV=production
+ENV SERVER_PORT=3001
+
+EXPOSE 3001
+
+CMD ["node", "server/index.js"]

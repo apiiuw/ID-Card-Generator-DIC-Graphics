@@ -1,0 +1,21 @@
+global:
+  ingress:
+    enabled: true
+    host: id-card-dic-graphics.local
+    tlsSecret: id-card-dic-graphics-tls
+
+services:
+  id-card-dic-graphics-app:
+    image: id-card-dic-graphics-app:latest
+    port: 80
+    replicas: 1
+  id-card-dic-graphics-backend:
+    image: id-card-dic-graphics-backend:latest
+    port: 3001
+    replicas: 1
+  id-card-dic-graphics-db:
+    image: mysql:8.0
+    port: 3306
+    replicas: 1
+    rootPassword: dic_graphics_secret
+    database: dic_idcard_generator

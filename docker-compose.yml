@@ -1,0 +1,68 @@
+networks:
+  autodev-net:
+    external: true
+
+volumes:
+  id-card-dic-graphics_db_data:
+
+services:
+  id-card-dic-graphics-app:
+    container_name: id-card-dic-graphics-app
+    image: id-card-dic-graphics-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - "80"
+    volumes:
+      - /project/autodev-py/data_sharing/id-card-dic-graphics:/app/uploads
+    depends_on:
+      id-card-dic-graphics-backend:
+        condition: service_started
+    networks:
+      - autodev-net
+    restart: always
+
+  id-card-dic-graphics-backend:
+    container_name: id-card-dic-graphics-backend
+    image: id-card-dic-graphics-backend
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    expose:
+      - "3001"
+    environment:
+      SERVER_PORT: "3001"
+      DB_HOST: id-card-dic-graphics-db
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: dic_graphics_secret
+      DB_NAME: dic_idcard_generator
+    volumes:
+      - /project/autodev-py/data_sharing/id-card-dic-graphics:/app/uploads
+    depends_on:
+      id-card-dic-graphics-db:
+        condition: service_healthy
+    networks:
+      - autodev-net
+    restart: always
+
+  id-card-dic-graphics-db:
+    container_name: id-card-dic-graphics-db
+    image: mysql:8.0
+    expose:
+      - "3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: dic_graphics_secret
+      MYSQL_DATABASE: dic_idcard_generator
+    volumes:
+      - id-card-dic-graphics_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pdic_graphics_secret"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - autodev-net
+    restart: always

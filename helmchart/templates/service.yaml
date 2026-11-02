@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-app
+spec:
+  selector:
+    app: id-card-dic-graphics-app
+  ports:
+    - port: {{ .Values.services.id-card-dic-graphics-app.port }}
+      targetPort: {{ .Values.services.id-card-dic-graphics-app.port }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-backend
+spec:
+  selector:
+    app: id-card-dic-graphics-backend
+  ports:
+    - port: {{ .Values.services.id-card-dic-graphics-backend.port }}
+      targetPort: {{ .Values.services.id-card-dic-graphics-backend.port }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-db
+spec:
+  selector:
+    app: id-card-dic-graphics-db
+  ports:
+    - port: {{ .Values.services.id-card-dic-graphics-db.port }}
+      targetPort: {{ .Values.services.id-card-dic-graphics-db.port }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-db-secret
+type: Opaque
+stringData:
+  root-password: {{ .Values.services.id-card-dic-graphics-db.rootPassword | quote }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-db-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

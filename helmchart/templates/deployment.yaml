@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-app
+  labels:
+    app: id-card-dic-graphics-app
+spec:
+  replicas: {{ .Values.services.id-card-dic-graphics-app.replicas }}
+  selector:
+    matchLabels:
+      app: id-card-dic-graphics-app
+  template:
+    metadata:
+      labels:
+        app: id-card-dic-graphics-app
+    spec:
+      containers:
+        - name: app
+          image: {{ .Values.services.id-card-dic-graphics-app.image }}
+          ports:
+            - containerPort: {{ .Values.services.id-card-dic-graphics-app.port }}
+          env:
+            - name: BACKEND_URL
+              value: "http://{{ .Release.Name }}-backend:{{ .Values.services.id-card-dic-graphics-backend.port }}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-backend
+  labels:
+    app: id-card-dic-graphics-backend
+spec:
+  replicas: {{ .Values.services.id-card-dic-graphics-backend.replicas }}
+  selector:
+    matchLabels:
+      app: id-card-dic-graphics-backend
+  template:
+    metadata:
+      labels:
+        app: id-card-dic-graphics-backend
+    spec:
+      containers:
+        - name: backend
+          image: {{ .Values.services.id-card-dic-graphics-backend.image }}
+          ports:
+            - containerPort: {{ .Values.services.id-card-dic-graphics-backend.port }}
+          env:
+            - name: SERVER_PORT
+              value: "{{ .Values.services.id-card-dic-graphics-backend.port }}"
+            - name: DB_HOST
+              value: "{{ .Release.Name }}-db"
+            - name: DB_PORT
+              value: "{{ .Values.services.id-card-dic-graphics-db.port }}"
+            - name: DB_USER
+              value: "root"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: root-password
+            - name: DB_NAME
+              value: "dic_idcard_generator"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-db
+  labels:
+    app: id-card-dic-graphics-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: id-card-dic-graphics-db
+  template:
+    metadata:
+      labels:
+        app: id-card-dic-graphics-db
+    spec:
+      containers:
+        - name: db
+          image: {{ .Values.services.id-card-dic-graphics-db.image }}
+          ports:
+            - containerPort: {{ .Values.services.id-card-dic-graphics-db.port }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: root-password
+            - name: MYSQL_DATABASE
+              value: "dic_idcard_generator"
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-db-data
