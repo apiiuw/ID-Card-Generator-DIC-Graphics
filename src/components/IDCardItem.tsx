@@ -112,13 +112,13 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         </div>
       </div>
 
-      {/* 2. PHOTO SECTION: Strictly Proportional 3:4 (Tidak Gepeng) */}
-      <div className="flex justify-center my-[0.5mm] shrink-0">
+      {/* 2. PHOTO SECTION: Strictly Proportional 3:4 & Compact */}
+      <div className="flex justify-center my-[0.4mm] shrink-0">
         <div
           className="relative bg-white border-[0.35mm] border-black overflow-hidden flex items-center justify-center rounded-none"
           style={{
-            width: '25mm',
-            height: '31.5mm', // neat 3:4 portrait photo ratio
+            width: '19.5mm',
+            height: '25.5mm', // neat 3:4 compact portrait photo ratio
           }}
         >
           {card.photoUrl ? (
@@ -129,9 +129,9 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
               loading="eager"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center text-slate-400 p-2">
-              <User className="w-7 h-7 opacity-40 mb-1" />
-              <span className="text-[1.8mm] font-sans font-semibold text-center">
+            <div className="flex flex-col items-center justify-center text-slate-400 p-1">
+              <User className="w-5 h-5 opacity-40 mb-0.5" />
+              <span className="text-[1.6mm] font-sans font-semibold text-center">
                 Pas Foto 3x4
               </span>
             </div>
@@ -152,14 +152,14 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         </div>
       </div>
 
-      {/* 4. QR CODE: Centered & Enlarged */}
-      <div className="flex justify-center items-center my-[0.3mm] shrink-0">
-        <div className="w-[19.5mm] h-[19.5mm] bg-white flex items-center justify-center overflow-hidden">
+      {/* 4. QR CODE / BARCODE: Centered & Significantly Enlarged */}
+      <div className="flex justify-center items-center my-[0.4mm] shrink-0">
+        <div className="w-[25.5mm] h-[25.5mm] bg-white flex items-center justify-center overflow-hidden">
           <QRCodeView
             value={card.idNumber || '00000000'}
             qrType={qrType}
             qrCodeUrl={qrCodeUrl}
-            size={180}
+            size={220}
             className="w-full h-full"
           />
         </div>

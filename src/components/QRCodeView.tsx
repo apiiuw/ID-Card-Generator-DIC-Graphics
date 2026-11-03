@@ -53,7 +53,7 @@ export const QRCodeView: React.FC<QRCodeViewProps> = ({
 
   return (
     <div
-      className={`flex items-center justify-center overflow-hidden ${className}`}
+      className={`flex items-center justify-center overflow-hidden [&>svg]:w-full [&>svg]:h-full [&>svg]:block ${className}`}
       dangerouslySetInnerHTML={{ __html: svgMarkup }}
     />
   );
