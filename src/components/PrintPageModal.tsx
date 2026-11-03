@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IDCard } from '../types';
-import { Printer, X, CheckSquare, Square, Layers, FileText } from 'lucide-react';
+import { Printer, X, CheckSquare, Square, Layers, FileText, FileDown, Sparkles } from 'lucide-react';
 
 interface PrintPageModalProps {
   isOpen: boolean;
@@ -9,6 +9,9 @@ interface PrintPageModalProps {
   cardPages: IDCard[][];
   currentPreviewPage: number;
   onConfirmPrint: (selectedPageIndices: number[]) => void;
+  onPrintPDF: (selectedPageIndices: number[]) => void;
+  isGeneratingPDF?: boolean;
+  pdfProgress?: { current: number; total: number; status: string } | null;
 }
 
 export const PrintPageModal: React.FC<PrintPageModalProps> = ({
@@ -18,6 +21,9 @@ export const PrintPageModal: React.FC<PrintPageModalProps> = ({
   cardPages,
   currentPreviewPage,
   onConfirmPrint,
+  onPrintPDF,
+  isGeneratingPDF = false,
+  pdfProgress = null,
 }) => {
   const [printScope, setPrintScope] = useState<'all' | 'current' | 'custom'>('all');
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
@@ -53,22 +59,32 @@ export const PrintPageModal: React.FC<PrintPageModalProps> = ({
     setSelectedPages([currentPreviewPage]);
   };
 
-  const handleExecutePrint = () => {
-    let pagesToPrint: number[] = [];
+  const getPagesToPrint = () => {
     if (printScope === 'all') {
-      pagesToPrint = Array.from({ length: totalPages }, (_, i) => i);
+      return Array.from({ length: totalPages }, (_, i) => i);
     } else if (printScope === 'current') {
-      pagesToPrint = [currentPreviewPage];
+      return [currentPreviewPage];
     } else {
-      pagesToPrint = selectedPages;
+      return selectedPages;
     }
+  };
 
-    if (pagesToPrint.length === 0) {
+  const handleExecutePrint = () => {
+    const pages = getPagesToPrint();
+    if (pages.length === 0) {
       alert('Silakan pilih minimal 1 halaman untuk dicetak.');
       return;
     }
+    onConfirmPrint(pages);
+  };
 
-    onConfirmPrint(pagesToPrint);
+  const handleExecutePrintPDF = () => {
+    const pages = getPagesToPrint();
+    if (pages.length === 0) {
+      alert('Silakan pilih minimal 1 halaman untuk dicetak.');
+      return;
+    }
+    onPrintPDF(pages);
   };
 
   // Calculate total cards in chosen pages
@@ -274,25 +290,65 @@ export const PrintPageModal: React.FC<PrintPageModalProps> = ({
               {totalCardsToPrint} ID Card
             </span>
           </div>
+
+          {/* Tablet & Print Orientation Tip */}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-[11px] text-amber-900 flex items-start gap-2.5">
+            <span className="text-base leading-none">📱</span>
+            <div className="space-y-1">
+              <div className="font-bold text-amber-950 flex items-center gap-1">
+                <span>Tips Cetak di iPad / Tablet:</span>
+              </div>
+              <p className="leading-relaxed text-amber-900/90">
+                Pilih tombol <strong className="text-blue-700">"Cetak PDF Landscape"</strong> agar kertas otomatis berorientasi Landscape di sistem AirPrint tablet Anda dan ukuran kartu <strong>100% presisi sesuai milimeter</strong> (tidak mengecil/terpotong).
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+            disabled={isGeneratingPDF}
+            className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
           >
             Batal
           </button>
-          <button
-            type="button"
-            onClick={handleExecutePrint}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Mulai Cetak ({activePageSelection.length} Lembar)</span>
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Standard Browser Print */}
+            <button
+              type="button"
+              onClick={handleExecutePrint}
+              disabled={isGeneratingPDF}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 active:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+              title="Cetak langsung menggunakan dialog print bawaan browser"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <span>Cetak Browser</span>
+            </button>
+
+            {/* High Precision A4 Landscape PDF Print */}
+            <button
+              type="button"
+              onClick={handleExecutePrintPDF}
+              disabled={isGeneratingPDF}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-60"
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>{pdfProgress?.status || 'Memproses PDF...'}</span>
+                </>
+              ) : (
+                <>
+                  <FileDown className="w-4 h-4" />
+                  <span>Cetak PDF Landscape (100% Pas)</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

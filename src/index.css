@@ -18,14 +18,27 @@
   }
 }
 
+/* Top-level CSS @page rules for desktop browsers (Must be outside @media print for WebKit) */
+@page {
+  size: 297mm 210mm;
+  margin: 0mm;
+}
+
+@page :left {
+  size: 297mm 210mm;
+  margin: 0mm;
+}
+
+@page :right {
+  size: 297mm 210mm;
+  margin: 0mm;
+}
+
 /* Print Specific Styles */
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 0;
-  }
-
-  body {
+  html, body {
+    width: 297mm !important;
+    height: 210mm !important;
     background-color: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
@@ -40,7 +53,15 @@
   }
 
   .print-only {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
     display: block !important;
+    width: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: auto !important;
+    z-index: auto !important;
   }
 
   .a4-sheet {
@@ -60,8 +81,14 @@
 }
 
 @media screen {
+  /* Rendered offscreen so html2canvas can capture for high-res PDF generation */
   .print-only {
-    display: none;
+    position: fixed;
+    left: -99999px;
+    top: 0;
+    width: 297mm;
+    pointer-events: none;
+    z-index: -100;
   }
 }
 

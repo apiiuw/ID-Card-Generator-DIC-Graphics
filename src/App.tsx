@@ -28,6 +28,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { LoginView } from './components/LoginView';
 import { FolderListView } from './components/FolderListView';
 import { PrintPageModal } from './components/PrintPageModal';
+import { generateA4LandscapePDF, PDFGenerationProgress } from './utils/printPdf';
 import {
   Plus,
   Printer,
@@ -140,6 +141,8 @@ export const App: React.FC = () => {
 
   // Selected pages for print
   const [pagesToPrint, setPagesToPrint] = useState<number[]>([]);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState<PDFGenerationProgress | null>(null);
 
   // Keep localStorage updated with folders
   useEffect(() => {
@@ -369,6 +372,47 @@ export const App: React.FC = () => {
     setTimeout(() => {
       window.print();
     }, 150);
+  };
+
+  const handlePrintPDF = async (selectedIndices: number[]) => {
+    try {
+      setPagesToPrint(selectedIndices);
+      setIsGeneratingPDF(true);
+      setPdfProgress({
+        current: 0,
+        total: selectedIndices.length,
+        status: 'Menyiapkan lembar cetak A4...',
+      });
+
+      // Wait for DOM to render selected pages into .print-only container
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
+      const printContainer = document.querySelector<HTMLElement>('.print-only');
+      if (!printContainer) {
+        throw new Error('Container lembar cetak tidak ditemukan.');
+      }
+
+      const { blobUrl, pdf } = await generateA4LandscapePDF(printContainer, {
+        fileName: `ID_Card_DIC_Graphics_A4_Landscape_${Date.now()}.pdf`,
+        onProgress: (p) => setPdfProgress(p),
+      });
+
+      setIsGeneratingPDF(false);
+      setPdfProgress(null);
+      setIsPrintModalOpen(false);
+
+      // Open PDF in new tab (iPad / Safari opens native PDF viewer with full Landscape support)
+      const newTab = window.open(blobUrl, '_blank');
+      if (!newTab) {
+        // If popup blocked, download directly
+        pdf.save(`ID_Card_DIC_Graphics_A4_Landscape_${Date.now()}.pdf`);
+      }
+    } catch (err: unknown) {
+      console.error('PDF export error:', err);
+      setIsGeneratingPDF(false);
+      setPdfProgress(null);
+      alert('Gagal membuat PDF: ' + (err instanceof Error ? err.message : String(err)));
+    }
   };
 
   const handleImportBackup = (jsonStr: string) => {
@@ -922,6 +966,9 @@ export const App: React.FC = () => {
         cardPages={cardPages}
         currentPreviewPage={previewPage}
         onConfirmPrint={handleConfirmPrint}
+        onPrintPDF={handlePrintPDF}
+        isGeneratingPDF={isGeneratingPDF}
+        pdfProgress={pdfProgress}
       />
     </div>
   );

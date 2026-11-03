@@ -183,6 +183,85 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
+        {/* Pengaturan Jarak Margin & Kertas A4 */}
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-800 text-xs">
+              Tata Letak Lembar A4 Landscape (Milimeter)
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                onSaveSettings({
+                  ...settings,
+                  marginMm: 10,
+                  gapXMm: 14,
+                  gapYMm: 10,
+                })
+              }
+              className="text-[11px] text-blue-600 hover:underline font-semibold"
+            >
+              Reset ke Standar Presisi
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2.5">
+            <div>
+              <label className="block text-slate-600 font-medium mb-1">
+                Margin Tepi (mm)
+              </label>
+              <input
+                type="text"
+                value={settings.marginMm ?? 10}
+                onChange={(e) =>
+                  onSaveSettings({
+                    ...settings,
+                    marginMm: parseNumber(e.target.value, 10),
+                  })
+                }
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-600 font-medium mb-1">
+                Jarak Horiz. X (mm)
+              </label>
+              <input
+                type="text"
+                value={settings.gapXMm ?? 14}
+                onChange={(e) =>
+                  onSaveSettings({
+                    ...settings,
+                    gapXMm: parseNumber(e.target.value, 14),
+                  })
+                }
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-600 font-medium mb-1">
+                Jarak Vert. Y (mm)
+              </label>
+              <input
+                type="text"
+                value={settings.gapYMm ?? 10}
+                onChange={(e) =>
+                  onSaveSettings({
+                    ...settings,
+                    gapYMm: parseNumber(e.target.value, 10),
+                  })
+                }
+                className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <p className="text-[11px] text-slate-500">
+            Jarak tepi kertas dan sela antar kartu saat dicetak pada kertas A4 landscape.
+          </p>
+        </div>
+
         {/* Aktif & Nonaktif Garis Panduan / Grid */}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
           <span className="block font-bold text-slate-800 text-xs">
