@@ -75,3 +75,4 @@ export async function generateA4LandscapePDF(
 
   return { blob, blobUrl, pdf };
 }
+
