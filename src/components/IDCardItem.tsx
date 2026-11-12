@@ -175,12 +175,12 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         </div>
       </div>
 
-      {/* 3. CONTRACTOR NAME: Raised slightly closer to photo with clear gap above QR code */}
+      {/* 3. CONTRACTOR NAME: Shifted up closer to photo without moving QR code upward */}
       <div
         className="w-full text-center shrink-0"
         style={{
-          marginTop: `${0.3 * s}mm`,
-          marginBottom: `${2.6 * s}mm`,
+          marginTop: `${-0.6 * s}mm`,
+          marginBottom: `${3.5 * s}mm`,
         }}
       >
         <div
@@ -221,10 +221,10 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         </div>
       </div>
 
-      {/* 5 & 6. BOTTOM TEXT BLOCK: Tight Company Name + ID Label & Number */}
+      {/* 5 & 6. BOTTOM TEXT BLOCK: Closer up to QR code with balanced bottom margin */}
       <div
-        className="w-full shrink-0 flex flex-col items-center justify-end"
-        style={{ marginTop: 'auto', paddingBottom: `${0.3 * s}mm` }}
+        className="w-full shrink-0 flex flex-col items-center justify-start"
+        style={{ marginTop: `${1.1 * s}mm` }}
       >
         {/* Company Name */}
         <div className="w-full text-center">
