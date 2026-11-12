@@ -90,7 +90,11 @@ export const App: React.FC = () => {
           }
           const remoteSettings = await fetchPrintSettingsApi();
           if (remoteSettings) {
-            setSettings(remoteSettings);
+            setSettings({
+              ...remoteSettings,
+              cardWidthMm: 55,
+              cardHeightMm: 92,
+            });
           }
         }
       } catch (err) {
@@ -109,7 +113,11 @@ export const App: React.FC = () => {
 
   // Current workspace cards & settings
   const [cards, setCards] = useState<IDCard[]>(() => activeFolder?.cards || INITIAL_CARDS);
-  const [settings, setSettings] = useState<PrintSettings>(() => activeFolder?.settings || DEFAULT_PRINT_SETTINGS);
+  const [settings, setSettings] = useState<PrintSettings>(() => ({
+    ...(activeFolder?.settings || DEFAULT_PRINT_SETTINGS),
+    cardWidthMm: 55,
+    cardHeightMm: 92,
+  }));
   const [activeCardId, setActiveCardId] = useState<string>(() => cards[0]?.id || '');
   const [activeSide, setActiveSide] = useState<'front' | 'back'>('front');
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
@@ -188,19 +196,24 @@ export const App: React.FC = () => {
     );
   };
 
-  // Sync workspace settings changes back to current active folder
+  // Sync workspace settings changes back to current active folder (card dimensions locked at 55x92 mm)
   const updateFolderSettings = (newSettings: PrintSettings) => {
-    setSettings(newSettings);
+    const lockedSettings: PrintSettings = {
+      ...newSettings,
+      cardWidthMm: 55,
+      cardHeightMm: 92,
+    };
+    setSettings(lockedSettings);
     if (!activeFolderId) return;
     setFolders((prev) =>
       prev.map((f) =>
         f.id === activeFolderId
-          ? { ...f, settings: newSettings, updatedAt: new Date().toISOString() }
+          ? { ...f, settings: lockedSettings, updatedAt: new Date().toISOString() }
           : f
       )
     );
     // Save to MySQL
-    savePrintSettingsApi(newSettings).catch((err) =>
+    savePrintSettingsApi(lockedSettings).catch((err) =>
       console.warn('Failed to save settings to MySQL:', err)
     );
   };

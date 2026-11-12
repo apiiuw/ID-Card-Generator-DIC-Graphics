@@ -26,12 +26,12 @@ export function getSheetGridLayout(settings: PrintSettings): SheetGridLayout {
   const pageWidthMm = isLandscape ? 297 : 210;
   const pageHeightMm = isLandscape ? 210 : 297;
 
-  const cardW = settings.cardWidthMm || 80;
-  const cardH = settings.cardHeightMm || 110;
+  const cardW = settings.cardWidthMm || 55;
+  const cardH = settings.cardHeightMm || 92;
   const gapFB = settings.gapFrontBackMm ?? 2;
   const margin = settings.marginMm ?? 8;
-  const gapX = settings.gapXMm ?? 4;
-  const gapY = settings.gapYMm ?? 4;
+  const gapX = settings.gapXMm ?? 6;
+  const gapY = settings.gapYMm ?? 6;
   const cutPad = settings.showCutMarks ? 3 : 0; // 1.5mm padding each side
 
   const availW = Math.max(50, pageWidthMm - margin * 2);

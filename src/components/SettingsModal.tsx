@@ -114,32 +114,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           );
         })()}
 
-        {/* Ukuran Kartu Fisik */}
+        {/* Ukuran Kartu Fisik (Terkunci 55 x 92 mm) */}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-bold text-slate-800 text-xs">
-              Ukuran Dimensi Kartu (Milimeter)
+              Ukuran Dimensi Kartu (Terkunci)
             </span>
-            <button
-              type="button"
-              onClick={() =>
-                onSaveSettings({
-                  ...settings,
-                  pageOrientation: 'landscape',
-                  cardWidthMm: 80,
-                  cardHeightMm: 110,
-                  gapFrontBackMm: 2,
-                  showCutMarks: false,
-                  showFoldMarks: false,
-                  marginMm: 8,
-                  gapXMm: 4,
-                  gapYMm: 4,
-                })
-              }
-              className="text-[11px] text-blue-600 hover:underline font-semibold"
-            >
-              Reset ke Standar (80 x 110 mm / 4 Pasang A4)
-            </button>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">
+              🔒 Terkunci 55 × 92 mm
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -149,14 +132,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </label>
               <input
                 type="text"
-                value={settings.cardWidthMm}
-                onChange={(e) =>
-                  onSaveSettings({
-                    ...settings,
-                    cardWidthMm: parseNumber(e.target.value, 80),
-                  })
-                }
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={55}
+                readOnly
+                disabled
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-slate-100 font-mono font-bold text-slate-500 cursor-not-allowed"
               />
             </div>
 
@@ -166,14 +145,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </label>
               <input
                 type="text"
-                value={settings.cardHeightMm}
-                onChange={(e) =>
-                  onSaveSettings({
-                    ...settings,
-                    cardHeightMm: parseNumber(e.target.value, 110),
-                  })
-                }
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={92}
+                readOnly
+                disabled
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-slate-100 font-mono font-bold text-slate-500 cursor-not-allowed"
               />
             </div>
           </div>
@@ -213,9 +188,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onSaveSettings({
                   ...settings,
                   pageOrientation: 'landscape',
+                  cardWidthMm: 55,
+                  cardHeightMm: 92,
                   marginMm: 8,
-                  gapXMm: 4,
-                  gapYMm: 4,
+                  gapXMm: 6,
+                  gapYMm: 6,
                   gapFrontBackMm: 2,
                 })
               }
@@ -314,8 +291,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
           <p className="text-[11px] text-slate-500">
-            <strong>Landscape:</strong> Mencetak 4 pasang kartu (2×2) per lembar A4 dengan skala proporsional otomatis (seperti Excel Preview).{' '}
-            <strong>Portrait:</strong> Mencetak 2 pasang ukuran 80 × 110 mm (8 × 11 cm) penuh 100%.
+            <strong>Landscape:</strong> Mencetak 4 pasang kartu ukuran 55 × 92 mm (2×2) secara penuh 100% per lembar A4.{' '}
+            <strong>Portrait:</strong> Mencetak 2 pasang ukuran 55 × 92 mm secara tegak.
           </p>
         </div>
 

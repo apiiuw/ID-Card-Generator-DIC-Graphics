@@ -265,38 +265,34 @@ export async function initDatabase() {
       console.log(`✅ MySQL: Folder 'ID Card Kontraktor KRW Terbaru' synced with ${cards.length} cards.`);
     }
 
-    // 5. Seed default settings (Landscape 2x2 = 4 pairs per A4, proportional to 80mm x 110mm / 8x11 cm)
+    // 5. Seed & enforce locked card dimensions (55mm x 92mm, Landscape 2x2 = 4 pairs per A4 sheet)
     const [existingSettings] = await conn.query(
-      'SELECT id, page_orientation, card_width_mm, card_height_mm, gap_x_mm FROM settings WHERE id = "global"'
+      'SELECT id, page_orientation, card_width_mm, card_height_mm FROM settings WHERE id = "global"'
     );
     if (existingSettings.length === 0) {
       await conn.query(`
         INSERT INTO settings (id, page_orientation, card_width_mm, card_height_mm, gap_front_back_mm, show_cut_marks, show_fold_marks, margin_mm, gap_x_mm, gap_y_mm, show_page_numbers, card_back_image, dic_logo_url, k3_logo_url)
-        VALUES ('global', 'landscape', 80.00, 110.00, 2.00, 0, 0, 8.00, 4.00, 4.00, 1, '/logos/card-back.png', '/logos/dic-logo.jpg', '/logos/k3-logo.jpg')
+        VALUES ('global', 'landscape', 55.00, 92.00, 2.00, 0, 0, 8.00, 6.00, 6.00, 1, '/logos/card-back.png', '/logos/dic-logo.jpg', '/logos/k3-logo.jpg')
       `);
-      console.log('✅ MySQL: Global print settings initialized (Landscape 4 pairs / 80x110 mm ratio).');
+      console.log('✅ MySQL: Global print settings initialized (locked 55x92 mm, Landscape 4 pairs).');
     } else if (
-      (parseFloat(existingSettings[0].card_width_mm) === 54 &&
-        parseFloat(existingSettings[0].card_height_mm) === 86) ||
-      (existingSettings[0].page_orientation === 'portrait' &&
-        parseFloat(existingSettings[0].card_width_mm) === 80 &&
-        parseFloat(existingSettings[0].card_height_mm) === 110 &&
-        parseFloat(existingSettings[0].gap_x_mm) === 10)
+      parseFloat(existingSettings[0].card_width_mm) !== 55 ||
+      parseFloat(existingSettings[0].card_height_mm) !== 92
     ) {
       await conn.query(`
         UPDATE settings
         SET page_orientation = 'landscape',
-            card_width_mm = 80.00,
-            card_height_mm = 110.00,
+            card_width_mm = 55.00,
+            card_height_mm = 92.00,
             gap_front_back_mm = 2.00,
             show_cut_marks = 0,
             show_fold_marks = 0,
             margin_mm = 8.00,
-            gap_x_mm = 4.00,
-            gap_y_mm = 4.00
+            gap_x_mm = 6.00,
+            gap_y_mm = 6.00
         WHERE id = 'global'
       `);
-      console.log('✅ MySQL: Migrated print settings to Landscape 4 pairs per A4 sheet.');
+      console.log('✅ MySQL: Migrated & locked print settings to 55x92 mm (Landscape 4 pairs per A4).');
     }
 
     conn.release();
