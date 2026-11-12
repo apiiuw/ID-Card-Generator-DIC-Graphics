@@ -17,10 +17,17 @@ export const A4PrintSheet: React.FC<A4PrintSheetProps> = ({
   totalPages = 1,
 }) => {
   const layout = getSheetGridLayout(settings);
-  const gapFrontBack = settings.gapFrontBackMm ?? 4;
-  const margin = settings.marginMm ?? 10;
-  const gapX = settings.gapXMm ?? 10;
-  const gapY = settings.gapYMm ?? 10;
+  const gapFrontBack = layout.effectiveGapFrontBackMm;
+  const margin = settings.marginMm ?? 8;
+  const gapX = layout.effectiveGapXMm;
+  const gapY = layout.effectiveGapYMm;
+
+  // Pass fitted dimensions into IDCardItem so cards preserve exact 8:11 proportions cleanly
+  const fittedSettings: PrintSettings = {
+    ...settings,
+    cardWidthMm: layout.effectiveCardWidthMm,
+    cardHeightMm: layout.effectiveCardHeightMm,
+  };
 
   // Pad array to match exact grid capacity (rows * cols)
   const slots: (IDCard | null)[] = Array.from(
@@ -35,8 +42,8 @@ export const A4PrintSheet: React.FC<A4PrintSheetProps> = ({
           key={`empty-${slotIndex}`}
           className="border border-dashed border-slate-200 rounded-none flex items-center justify-center text-slate-300 text-xs font-serif"
           style={{
-            width: `${(settings.cardWidthMm || 80) * 2 + gapFrontBack}mm`,
-            height: `${settings.cardHeightMm || 110}mm`,
+            width: `${layout.effectiveCardWidthMm * 2 + gapFrontBack}mm`,
+            height: `${layout.effectiveCardHeightMm}mm`,
           }}
         >
           Slot Kartu #{slotIndex + 1} Kosong
@@ -56,7 +63,7 @@ export const A4PrintSheet: React.FC<A4PrintSheetProps> = ({
         {/* Front Side */}
         <IDCardItem
           card={card}
-          settings={settings}
+          settings={fittedSettings}
           side="front"
           isPrint={true}
           className="rounded-none shrink-0"
@@ -67,7 +74,7 @@ export const A4PrintSheet: React.FC<A4PrintSheetProps> = ({
           className="relative flex items-center justify-center shrink-0"
           style={{
             width: `${gapFrontBack}mm`,
-            height: `${settings.cardHeightMm || 110}mm`,
+            height: `${layout.effectiveCardHeightMm}mm`,
           }}
         >
           {settings.showFoldMarks && (
@@ -78,7 +85,7 @@ export const A4PrintSheet: React.FC<A4PrintSheetProps> = ({
         {/* Back Side */}
         <IDCardItem
           card={card}
-          settings={settings}
+          settings={fittedSettings}
           side="back"
           isPrint={true}
           className="rounded-none shrink-0"

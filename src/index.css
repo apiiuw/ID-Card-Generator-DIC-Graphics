@@ -20,7 +20,7 @@
 
 /* Top-level CSS @page default (overridden dynamically by App.tsx based on settings.pageOrientation) */
 @page {
-  size: A4 portrait;
+  size: A4 landscape;
   margin: 0mm;
 }
 

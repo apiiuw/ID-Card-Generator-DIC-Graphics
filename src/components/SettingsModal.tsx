@@ -104,6 +104,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
               <p className="text-[11px] text-blue-800 mt-1 leading-relaxed">
                 1 lembar kertas A4 mencetak {layout.cardsPerPage} ID Card lengkap ({layout.cols} kolom × {layout.rows} baris, Sisi Depan & Belakang berdampingan).
+                {layout.fitScale < 0.999 && (
+                  <>
+                    {' '}Auto-fit <strong>{Math.round(layout.fitScale * 100)}%</strong> ({layout.effectiveCardWidthMm.toFixed(1)} × {layout.effectiveCardHeightMm.toFixed(1)} mm/kartu di kertas A4).
+                  </>
+                )}
               </p>
             </div>
           );
@@ -120,15 +125,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() =>
                 onSaveSettings({
                   ...settings,
-                  pageOrientation: 'portrait',
+                  pageOrientation: 'landscape',
                   cardWidthMm: 80,
                   cardHeightMm: 110,
-                  gapFrontBackMm: 4,
+                  gapFrontBackMm: 2,
+                  showCutMarks: false,
+                  showFoldMarks: false,
+                  marginMm: 8,
+                  gapXMm: 4,
+                  gapYMm: 4,
                 })
               }
               className="text-[11px] text-blue-600 hover:underline font-semibold"
             >
-              Reset ke Standar (80 x 110 mm / 8x11 cm)
+              Reset ke Standar (80 x 110 mm / 4 Pasang A4)
             </button>
           </div>
 
@@ -202,10 +212,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() =>
                 onSaveSettings({
                   ...settings,
-                  pageOrientation: 'portrait',
-                  marginMm: 10,
-                  gapXMm: 10,
-                  gapYMm: 10,
+                  pageOrientation: 'landscape',
+                  marginMm: 8,
+                  gapXMm: 4,
+                  gapYMm: 4,
+                  gapFrontBackMm: 2,
                 })
               }
               className="text-[11px] text-blue-600 hover:underline font-semibold"
@@ -303,7 +314,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
           <p className="text-[11px] text-slate-500">
-            Untuk kartu 80 × 110 mm (8 × 11 cm), mode Portrait memuat 2 kartu lengkap depan-belakang per lembar A4.
+            <strong>Landscape:</strong> Mencetak 4 pasang kartu (2×2) per lembar A4 dengan skala proporsional otomatis (seperti Excel Preview).{' '}
+            <strong>Portrait:</strong> Mencetak 2 pasang ukuran 80 × 110 mm (8 × 11 cm) penuh 100%.
           </p>
         </div>
 

@@ -7,11 +7,19 @@ export interface SheetGridLayout {
   cols: number;
   rows: number;
   cardsPerPage: number;
+  fitScale: number;
+  effectiveCardWidthMm: number;
+  effectiveCardHeightMm: number;
+  effectiveGapFrontBackMm: number;
+  effectiveGapXMm: number;
+  effectiveGapYMm: number;
 }
 
 /**
- * Calculates how many Front+Back ID card pairs cleanly fit onto an A4 sheet
- * without overflow or clipping, based on the configured dimensions and orientation.
+ * Calculates the A4 sheet layout and proportional fit scale.
+ * - In Landscape (default): Always lays out 2×2 = 4 Front+Back card pairs per A4 Landscape sheet (297×210 mm),
+ *   proportionally fitting the configured card size (e.g. 80×110 mm at 8:11 ratio) so all 4 pairs fit neatly.
+ * - In Portrait: Lays out cards at 100% unscaled size (1×2 = 2 pairs for 80×110 mm).
  */
 export function getSheetGridLayout(settings: PrintSettings): SheetGridLayout {
   const isLandscape = settings.pageOrientation !== 'portrait';
@@ -20,17 +28,42 @@ export function getSheetGridLayout(settings: PrintSettings): SheetGridLayout {
 
   const cardW = settings.cardWidthMm || 80;
   const cardH = settings.cardHeightMm || 110;
-  const gapFB = settings.gapFrontBackMm ?? 4;
-  const margin = settings.marginMm ?? 10;
-  const gapX = settings.gapXMm ?? 10;
-  const gapY = settings.gapYMm ?? 10;
-  const cutPad = settings.showCutMarks ? 3 : 0; // 1.5mm border padding each side
+  const gapFB = settings.gapFrontBackMm ?? 2;
+  const margin = settings.marginMm ?? 8;
+  const gapX = settings.gapXMm ?? 4;
+  const gapY = settings.gapYMm ?? 4;
+  const cutPad = settings.showCutMarks ? 3 : 0; // 1.5mm padding each side
+
+  const availW = Math.max(50, pageWidthMm - margin * 2);
+  const availH = Math.max(50, pageHeightMm - margin * 2);
+
+  if (isLandscape) {
+    // Target 2×2 = 4 pairs per A4 Landscape sheet (matching Excel Print Preview)
+    const cols = 2;
+    const rows = 2;
+    const totalUnscaledW = cols * (cardW * 2 + gapFB + cutPad) + (cols - 1) * gapX;
+    const totalUnscaledH = rows * (cardH + cutPad) + (rows - 1) * gapY;
+
+    const fitScale = Math.min(1, availW / totalUnscaledW, availH / totalUnscaledH);
+
+    return {
+      isLandscape,
+      pageWidthMm,
+      pageHeightMm,
+      cols,
+      rows,
+      cardsPerPage: 4,
+      fitScale,
+      effectiveCardWidthMm: cardW * fitScale,
+      effectiveCardHeightMm: cardH * fitScale,
+      effectiveGapFrontBackMm: gapFB * fitScale,
+      effectiveGapXMm: gapX * fitScale,
+      effectiveGapYMm: gapY * fitScale,
+    };
+  }
 
   const pairW = cardW * 2 + gapFB + cutPad;
   const pairH = cardH + cutPad;
-
-  const availW = Math.max(pairW, pageWidthMm - margin * 2);
-  const availH = Math.max(pairH, pageHeightMm - margin * 2);
 
   const cols = Math.max(1, Math.floor((availW + gapX) / (pairW + gapX)));
   const rows = Math.max(1, Math.floor((availH + gapY) / (pairH + gapY)));
@@ -42,5 +75,11 @@ export function getSheetGridLayout(settings: PrintSettings): SheetGridLayout {
     cols,
     rows,
     cardsPerPage: cols * rows,
+    fitScale: 1,
+    effectiveCardWidthMm: cardW,
+    effectiveCardHeightMm: cardH,
+    effectiveGapFrontBackMm: gapFB,
+    effectiveGapXMm: gapX,
+    effectiveGapYMm: gapY,
   };
 }

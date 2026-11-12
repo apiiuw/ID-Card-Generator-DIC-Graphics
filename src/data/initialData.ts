@@ -56,15 +56,15 @@ export const INITIAL_CARDS: IDCard[] = [
 ];
 
 export const DEFAULT_PRINT_SETTINGS: PrintSettings = {
-  pageOrientation: 'portrait',
+  pageOrientation: 'landscape',
   cardWidthMm: 80,
   cardHeightMm: 110,
-  gapFrontBackMm: 4,
-  showCutMarks: true,
-  showFoldMarks: true,
-  marginMm: 10,
-  gapXMm: 10,
-  gapYMm: 10,
+  gapFrontBackMm: 2,
+  showCutMarks: false,
+  showFoldMarks: false,
+  marginMm: 8,
+  gapXMm: 4,
+  gapYMm: 4,
   showPageNumbers: true,
   cardBackImage: '/logos/card-back.png',
   dicLogoUrl: '/logos/dic-logo.jpg',

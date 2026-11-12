@@ -122,7 +122,7 @@ CREATE TABLE `settings` (
 
 LOCK TABLES `settings` WRITE;
 /*!40000 ALTER TABLE `settings` DISABLE KEYS */;
-INSERT INTO `settings` VALUES ('global',NULL,'portrait',80.00,110.00,4.00,1,1,10.00,10.00,10.00,1,'/logos/card-back.png','/logos/dic-logo.jpg','/logos/k3-logo.jpg','2026-11-12 08:00:00');
+INSERT INTO `settings` VALUES ('global',NULL,'landscape',80.00,110.00,2.00,0,0,8.00,4.00,4.00,1,'/logos/card-back.png','/logos/dic-logo.jpg','/logos/k3-logo.jpg','2026-11-12 09:34:00');
 /*!40000 ALTER TABLE `settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
