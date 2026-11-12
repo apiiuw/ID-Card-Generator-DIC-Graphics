@@ -76,7 +76,7 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`relative bg-white select-none rounded-none overflow-hidden flex flex-col justify-between ${className}`}
+      className={`relative bg-white select-none rounded-none overflow-hidden flex flex-col ${className}`}
       style={{
         width: `${widthMm}mm`,
         height: `${heightMm}mm`,
@@ -85,7 +85,7 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         maxWidth: `${widthMm}mm`,
         maxHeight: `${heightMm}mm`,
         border: `${0.4 * s}mm solid #000000`,
-        padding: `${2 * s}mm ${2.5 * s}mm ${2.0 * s}mm ${2.5 * s}mm`,
+        padding: `${1.4 * s}mm ${2.5 * s}mm ${1.6 * s}mm ${2.5 * s}mm`,
         pageBreakInside: 'avoid',
         boxSizing: 'border-box',
         fontFamily: "'Cambria', 'Caladea', 'Georgia', serif",
@@ -94,12 +94,12 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
       {/* 1. TOP HEADER: Left DIC Logo | Center "ID CARD / KONTRAKTOR" | Right K3 Logo */}
       <div
         className="w-full flex items-start justify-between shrink-0"
-        style={{ height: `${11.5 * s}mm` }}
+        style={{ height: `${10.5 * s}mm` }}
       >
         {/* Left: DIC Logo */}
         <div
           className="flex items-start justify-start shrink-0"
-          style={{ width: `${15.5 * s}mm`, height: `${9.5 * s}mm` }}
+          style={{ width: `${15.5 * s}mm`, height: `${9.2 * s}mm`, paddingTop: `${0.3 * s}mm` }}
         >
           <img
             src={settings.dicLogoUrl || '/logos/dic-logo.jpg'}
@@ -108,21 +108,21 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
           />
         </div>
 
-        {/* Center: Title Lines directly between logos */}
+        {/* Center: Title Lines raised cleanly near top margin */}
         <div
           className="flex-1 text-center flex flex-col justify-start items-center"
-          style={{ paddingTop: `${0.2 * s}mm`, lineHeight: 1.06 }}
+          style={{ paddingTop: 0, lineHeight: 1.03 }}
         >
           <div
             className="font-bold text-black uppercase tracking-normal whitespace-nowrap"
-            style={{ fontSize: `${4.8 * s}mm` }}
+            style={{ fontSize: `${4.5 * s}mm` }}
           >
             ID CARD
           </div>
           <div
             className="font-bold text-black uppercase tracking-normal whitespace-nowrap"
             style={{
-              fontSize: subTitle.length > 14 ? `${3.8 * s}mm` : `${4.8 * s}mm`,
+              fontSize: subTitle.length > 14 ? `${3.6 * s}mm` : `${4.5 * s}mm`,
             }}
           >
             {subTitle}
@@ -132,7 +132,7 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         {/* Right: K3 Logo */}
         <div
           className="flex items-start justify-end shrink-0"
-          style={{ width: `${15.5 * s}mm`, height: `${10.5 * s}mm` }}
+          style={{ width: `${15.5 * s}mm`, height: `${10.2 * s}mm`, paddingTop: `${0.2 * s}mm` }}
         >
           <img
             src={settings.k3LogoUrl || '/logos/k3-logo.jpg'}
@@ -142,16 +142,16 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         </div>
       </div>
 
-      {/* 2. PHOTO SECTION: Clean Portrait, NO BORDER (same width as QR code below) */}
+      {/* 2. PHOTO SECTION: Clean Portrait, NO BORDER (exact same width as QR code below) */}
       <div
         className="flex justify-center items-center shrink-0"
-        style={{ marginTop: `${0.6 * s}mm` }}
+        style={{ marginTop: `${1.8 * s}mm` }}
       >
         <div
           className="relative bg-white overflow-hidden flex items-center justify-center rounded-none border-0"
           style={{
-            width: `${36.0 * s}mm`,
-            height: `${38.0 * s}mm`,
+            width: `${35.5 * s}mm`,
+            height: `${37.0 * s}mm`,
           }}
         >
           {card.photoUrl ? (
@@ -175,18 +175,18 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         </div>
       </div>
 
-      {/* 3. CONTRACTOR NAME: Cambria Bold Centered cleanly (no overflow-hidden so html2canvas never clips glyphs) */}
+      {/* 3. CONTRACTOR NAME: Raised slightly closer to photo with clear gap above QR code */}
       <div
         className="w-full text-center shrink-0"
         style={{
-          marginTop: `${0.4 * s}mm`,
-          marginBottom: `${1.4 * s}mm`,
+          marginTop: `${0.3 * s}mm`,
+          marginBottom: `${2.6 * s}mm`,
         }}
       >
         <div
           className="font-bold text-black uppercase tracking-tight whitespace-nowrap"
           style={{
-            lineHeight: 1.22,
+            lineHeight: 1.15,
             fontSize:
               nameStr.length > 30
                 ? `${2.8 * s}mm`
@@ -202,13 +202,13 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         </div>
       </div>
 
-      {/* 4. QR CODE / BARCODE: Exact same width as photo (36.0mm x 36.0mm) */}
+      {/* 4. QR CODE / BARCODE: Exact same width as photo (35.5mm x 35.5mm) */}
       <div className="flex justify-center items-center shrink-0">
         <div
           className="bg-white flex items-center justify-center overflow-hidden"
           style={{
-            width: `${36.0 * s}mm`,
-            height: `${36.0 * s}mm`,
+            width: `${35.5 * s}mm`,
+            height: `${35.5 * s}mm`,
           }}
         >
           <QRCodeView
@@ -221,17 +221,17 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
         </div>
       </div>
 
-      {/* 5 & 6. BOTTOM TEXT BLOCK: Company Name + ID Label & Number (no overflow-hidden/leading-none so html2canvas renders crisp) */}
+      {/* 5 & 6. BOTTOM TEXT BLOCK: Tight Company Name + ID Label & Number */}
       <div
         className="w-full shrink-0 flex flex-col items-center justify-end"
-        style={{ marginTop: `${0.8 * s}mm` }}
+        style={{ marginTop: 'auto', paddingBottom: `${0.3 * s}mm` }}
       >
         {/* Company Name */}
         <div className="w-full text-center">
           <div
             className="font-bold text-black uppercase tracking-tight whitespace-nowrap"
             style={{
-              lineHeight: 1.24,
+              lineHeight: 1.12,
               fontSize:
                 companyStr.length > 36
                   ? `${2.2 * s}mm`
@@ -247,12 +247,12 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
           </div>
         </div>
 
-        {/* Bottom Row: Inline spans for natural shared baseline in both Browser Print & html2canvas */}
+        {/* Bottom Row: Closer vertically to Company Name, crisp horizontal gap */}
         <div
           className="w-full text-center whitespace-nowrap"
           style={{
-            lineHeight: 1.26,
-            marginTop: `${0.3 * s}mm`,
+            lineHeight: 1.15,
+            marginTop: `${0.1 * s}mm`,
             paddingLeft: `${1 * s}mm`,
             paddingRight: `${1 * s}mm`,
           }}
@@ -263,7 +263,7 @@ export const IDCardItem: React.FC<IDCardItemProps> = ({
                 <span
                   className="font-bold text-black uppercase tracking-tight"
                   style={{
-                    marginRight: idNumberStr ? `${4.2 * s}mm` : 0,
+                    marginRight: idNumberStr ? `${3.0 * s}mm` : 0,
                     fontSize:
                       totalIdChars > 30
                         ? `${2.2 * s}mm`
