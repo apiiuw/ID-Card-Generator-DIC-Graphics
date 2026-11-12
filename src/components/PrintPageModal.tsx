@@ -8,6 +8,8 @@ interface PrintPageModalProps {
   totalPages: number;
   cardPages: IDCard[][];
   currentPreviewPage: number;
+  cardsPerPage?: number;
+  pageOrientation?: 'portrait' | 'landscape';
   onConfirmPrint: (selectedPageIndices: number[]) => void;
   onPrintPDF: (selectedPageIndices: number[]) => void;
   isGeneratingPDF?: boolean;
@@ -20,6 +22,8 @@ export const PrintPageModal: React.FC<PrintPageModalProps> = ({
   totalPages,
   cardPages,
   currentPreviewPage,
+  cardsPerPage = 2,
+  pageOrientation = 'portrait',
   onConfirmPrint,
   onPrintPDF,
   isGeneratingPDF = false,
@@ -111,7 +115,7 @@ export const PrintPageModal: React.FC<PrintPageModalProps> = ({
             <div>
               <h3 className="text-sm font-bold">Pilih Halaman yang Ingin Dicetak</h3>
               <p className="text-[11px] text-slate-400">
-                1 Lembar Kertas A4 = 4 ID Card Depan & Belakang Lengkap
+                1 Lembar A4 ({pageOrientation === 'landscape' ? 'Landscape' : 'Portrait'}) = {cardsPerPage} ID Card Depan & Belakang
               </p>
             </div>
           </div>
@@ -296,10 +300,10 @@ export const PrintPageModal: React.FC<PrintPageModalProps> = ({
             <span className="text-base leading-none">📱</span>
             <div className="space-y-1">
               <div className="font-bold text-amber-950 flex items-center gap-1">
-                <span>Tips Cetak di iPad / Tablet:</span>
+                <span>Tips Cetak Ukuran Presisi 1:1 (iPad / Tablet / PC):</span>
               </div>
               <p className="leading-relaxed text-amber-900/90">
-                Pilih tombol <strong className="text-blue-700">"Cetak PDF Landscape"</strong> agar kertas otomatis berorientasi Landscape di sistem AirPrint tablet Anda dan ukuran kartu <strong>100% presisi sesuai milimeter</strong> (tidak mengecil/terpotong).
+                Pilih tombol <strong className="text-blue-700">"Cetak PDF ({pageOrientation === 'landscape' ? 'Landscape' : 'Portrait'})"</strong> agar orientasi kertas A4 otomatis sesuai dan ukuran fisik kartu <strong>100% presisi sesuai pengaturan milimeter</strong> (tidak mengecil/terpotong).
               </p>
             </div>
           </div>
@@ -329,7 +333,7 @@ export const PrintPageModal: React.FC<PrintPageModalProps> = ({
               <span>Cetak Browser</span>
             </button>
 
-            {/* High Precision A4 Landscape PDF Print */}
+            {/* High Precision PDF Print */}
             <button
               type="button"
               onClick={handleExecutePrintPDF}
@@ -344,7 +348,7 @@ export const PrintPageModal: React.FC<PrintPageModalProps> = ({
               ) : (
                 <>
                   <FileDown className="w-4 h-4" />
-                  <span>Cetak PDF Landscape (100% Pas)</span>
+                  <span>Cetak PDF {pageOrientation === 'landscape' ? 'Landscape' : 'Portrait'} (100% Pas)</span>
                 </>
               )}
             </button>

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { PrintSettings } from '../types';
+import { getSheetGridLayout } from '../utils/sheetLayout';
 import { X, Sliders, Sparkles, RefreshCw, Scissors, FoldHorizontal } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -88,20 +89,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       {/* Body Content */}
       <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs">
         {/* Format Cetak Banner */}
-        <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/70">
-          <div className="font-bold text-blue-900 flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              Format 1 Lembar A4 (Landscape)
-            </span>
-            <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-600 text-white">
-              4 ID Card Lengkap
-            </span>
-          </div>
-          <p className="text-[11px] text-blue-800 mt-1 leading-relaxed">
-            1 lembar kertas A4 langsung mencetak 4 ID Card lengkap (Sisi Depan & Belakang berdampingan).
-          </p>
-        </div>
+        {(() => {
+          const layout = getSheetGridLayout(settings);
+          return (
+            <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/70">
+              <div className="font-bold text-blue-900 flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-blue-600" />
+                  Format 1 Lembar A4 ({layout.isLandscape ? 'Landscape' : 'Portrait'})
+                </span>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-600 text-white">
+                  {layout.cardsPerPage} ID Card Lengkap
+                </span>
+              </div>
+              <p className="text-[11px] text-blue-800 mt-1 leading-relaxed">
+                1 lembar kertas A4 mencetak {layout.cardsPerPage} ID Card lengkap ({layout.cols} kolom × {layout.rows} baris, Sisi Depan & Belakang berdampingan).
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Ukuran Kartu Fisik */}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
@@ -114,13 +120,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               onClick={() =>
                 onSaveSettings({
                   ...settings,
-                  cardWidthMm: 54,
-                  cardHeightMm: 86,
+                  pageOrientation: 'portrait',
+                  cardWidthMm: 80,
+                  cardHeightMm: 110,
+                  gapFrontBackMm: 4,
                 })
               }
               className="text-[11px] text-blue-600 hover:underline font-semibold"
             >
-              Reset ke Standar (54 x 86 mm)
+              Reset ke Standar (80 x 110 mm / 8x11 cm)
             </button>
           </div>
 
@@ -135,7 +143,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onChange={(e) =>
                   onSaveSettings({
                     ...settings,
-                    cardWidthMm: parseNumber(e.target.value, 54),
+                    cardWidthMm: parseNumber(e.target.value, 80),
                   })
                 }
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -152,7 +160,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onChange={(e) =>
                   onSaveSettings({
                     ...settings,
-                    cardHeightMm: parseNumber(e.target.value, 86),
+                    cardHeightMm: parseNumber(e.target.value, 110),
                   })
                 }
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -167,11 +175,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="flex items-center gap-3">
               <input
                 type="text"
-                value={settings.gapFrontBackMm ?? 6}
+                value={settings.gapFrontBackMm ?? 4}
                 onChange={(e) =>
                   onSaveSettings({
                     ...settings,
-                    gapFrontBackMm: parseNumber(e.target.value, 6),
+                    gapFrontBackMm: parseNumber(e.target.value, 4),
                   })
                 }
                 className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -183,25 +191,62 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        {/* Pengaturan Jarak Margin & Kertas A4 */}
+        {/* Pengaturan Jarak Margin & Orientasi Kertas A4 */}
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-bold text-slate-800 text-xs">
-              Tata Letak Lembar A4 Landscape (Milimeter)
+              Orientasi & Tata Letak Lembar A4
             </span>
             <button
               type="button"
               onClick={() =>
                 onSaveSettings({
                   ...settings,
+                  pageOrientation: 'portrait',
                   marginMm: 10,
-                  gapXMm: 14,
+                  gapXMm: 10,
                   gapYMm: 10,
                 })
               }
               className="text-[11px] text-blue-600 hover:underline font-semibold"
             >
-              Reset ke Standar Presisi
+              Reset Tata Letak
+            </button>
+          </div>
+
+          {/* Orientasi Selector */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                onSaveSettings({
+                  ...settings,
+                  pageOrientation: 'portrait',
+                })
+              }
+              className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${
+                settings.pageOrientation === 'portrait'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+            >
+              Portrait (Tegak)
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                onSaveSettings({
+                  ...settings,
+                  pageOrientation: 'landscape',
+                })
+              }
+              className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${
+                settings.pageOrientation !== 'portrait'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+              }`}
+            >
+              Landscape (Mendatar)
             </button>
           </div>
 
@@ -229,11 +274,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </label>
               <input
                 type="text"
-                value={settings.gapXMm ?? 14}
+                value={settings.gapXMm ?? 10}
                 onChange={(e) =>
                   onSaveSettings({
                     ...settings,
-                    gapXMm: parseNumber(e.target.value, 14),
+                    gapXMm: parseNumber(e.target.value, 10),
                   })
                 }
                 className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -258,7 +303,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
           <p className="text-[11px] text-slate-500">
-            Jarak tepi kertas dan sela antar kartu saat dicetak pada kertas A4 landscape.
+            Untuk kartu 80 × 110 mm (8 × 11 cm), mode Portrait memuat 2 kartu lengkap depan-belakang per lembar A4.
           </p>
         </div>
 

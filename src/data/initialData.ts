@@ -56,14 +56,14 @@ export const INITIAL_CARDS: IDCard[] = [
 ];
 
 export const DEFAULT_PRINT_SETTINGS: PrintSettings = {
-  pageOrientation: 'landscape',
-  cardWidthMm: 54,
-  cardHeightMm: 86,
-  gapFrontBackMm: 6,
+  pageOrientation: 'portrait',
+  cardWidthMm: 80,
+  cardHeightMm: 110,
+  gapFrontBackMm: 4,
   showCutMarks: true,
   showFoldMarks: true,
   marginMm: 10,
-  gapXMm: 16,
+  gapXMm: 10,
   gapYMm: 10,
   showPageNumbers: true,
   cardBackImage: '/logos/card-back.png',

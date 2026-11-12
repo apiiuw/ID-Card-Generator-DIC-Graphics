@@ -29,6 +29,7 @@ import { LoginView } from './components/LoginView';
 import { FolderListView } from './components/FolderListView';
 import { PrintPageModal } from './components/PrintPageModal';
 import { generateA4LandscapePDF, PDFGenerationProgress } from './utils/printPdf';
+import { getSheetGridLayout } from './utils/sheetLayout';
 import {
   Plus,
   Printer,
@@ -154,11 +155,13 @@ export const App: React.FC = () => {
     saveActiveFolderIdToStorage(activeFolderId);
   }, [activeFolderId]);
 
-  // When activeFolder changes, reload its cards and settings into workspace
+  // When activeFolder changes, reload its cards into workspace (keep global MySQL settings unless folder overrides)
   useEffect(() => {
     if (activeFolder) {
       setCards(activeFolder.cards || []);
-      setSettings(activeFolder.settings || DEFAULT_PRINT_SETTINGS);
+      if (activeFolder.settings) {
+        setSettings(activeFolder.settings);
+      }
       if (activeFolder.cards && activeFolder.cards.length > 0) {
         setActiveCardId(activeFolder.cards[0].id);
       } else {
@@ -213,17 +216,41 @@ export const App: React.FC = () => {
     return cards.find((c) => c.id === activeCardId) || cards[0];
   }, [cards, activeCardId]);
 
-  // Group cards into pages of 4 cards each
+  // Compute dynamic sheet grid capacity based on card size & page orientation
+  const sheetLayout = useMemo(() => getSheetGridLayout(settings), [settings]);
+  const cardsPerPage = sheetLayout.cardsPerPage;
+
+  // Group cards into pages dynamically
   const cardPages = useMemo(() => {
     const pages: IDCard[][] = [];
-    for (let i = 0; i < cards.length; i += 4) {
-      pages.push(cards.slice(i, i + 4));
+    for (let i = 0; i < cards.length; i += cardsPerPage) {
+      pages.push(cards.slice(i, i + cardsPerPage));
     }
     if (pages.length === 0) {
       pages.push([]);
     }
     return pages;
-  }, [cards]);
+  }, [cards, cardsPerPage]);
+
+  // Keep previewPage within valid range when cardPages shrinks
+  useEffect(() => {
+    if (previewPage >= cardPages.length) {
+      setPreviewPage(Math.max(0, cardPages.length - 1));
+    }
+  }, [cardPages.length, previewPage]);
+
+  // Sync @page print rule orientation with current settings
+  useEffect(() => {
+    const styleId = 'dynamic-print-page-style';
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+    const orient = sheetLayout.isLandscape ? 'landscape' : 'portrait';
+    styleEl.textContent = `@page { size: A4 ${orient}; margin: 0mm; }`;
+  }, [sheetLayout.isLandscape]);
 
   // Update default pagesToPrint
   useEffect(() => {
@@ -392,8 +419,10 @@ export const App: React.FC = () => {
         throw new Error('Container lembar cetak tidak ditemukan.');
       }
 
+      const orient = sheetLayout.isLandscape ? 'landscape' : 'portrait';
       const { blobUrl, pdf } = await generateA4LandscapePDF(printContainer, {
-        fileName: `ID_Card_DIC_Graphics_A4_Landscape_${Date.now()}.pdf`,
+        fileName: `ID_Card_DIC_Graphics_A4_${orient}_${Date.now()}.pdf`,
+        orientation: orient,
         onProgress: (p) => setPdfProgress(p),
       });
 
@@ -401,11 +430,11 @@ export const App: React.FC = () => {
       setPdfProgress(null);
       setIsPrintModalOpen(false);
 
-      // Open PDF in new tab (iPad / Safari opens native PDF viewer with full Landscape support)
+      // Open PDF in new tab (iPad / Safari opens native PDF viewer with exact orientation)
       const newTab = window.open(blobUrl, '_blank');
       if (!newTab) {
         // If popup blocked, download directly
-        pdf.save(`ID_Card_DIC_Graphics_A4_Landscape_${Date.now()}.pdf`);
+        pdf.save(`ID_Card_DIC_Graphics_A4_${orient}_${Date.now()}.pdf`);
       }
     } catch (err: unknown) {
       console.error('PDF export error:', err);
@@ -699,7 +728,7 @@ export const App: React.FC = () => {
                 </p>
                 <p className="text-[11px] leading-relaxed text-blue-800/80">
                   Total <strong>{cards.length} kartu</strong> akan dicetak ke dalam{' '}
-                  <strong>{cardPages.length} lembar A4</strong> (masing-masing 4 kartu lengkap Depan & Belakang berdampingan).
+                  <strong>{cardPages.length} lembar A4</strong> (masing-masing {cardsPerPage} kartu lengkap Depan & Belakang berdampingan).
                 </p>
                 <button
                   type="button"
@@ -757,27 +786,32 @@ export const App: React.FC = () => {
 
                     {/* Scaled Preview Box that dynamically fits card mm size */}
                     <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-6 flex flex-col items-center justify-center w-full min-h-[380px]">
-                      <div
-                        className="relative flex items-center justify-center transition-all"
-                        style={{
-                          width: `calc(${settings.cardWidthMm || 54}mm * 1.25)`,
-                          height: `calc(${settings.cardHeightMm || 86}mm * 1.25)`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            transform: 'scale(1.25)',
-                            transformOrigin: 'center center',
-                          }}
-                          className="shadow-md"
-                        >
-                          <IDCardItem
-                            card={activeCard}
-                            settings={settings}
-                            side={activeSide}
-                          />
-                        </div>
-                      </div>
+                      {(() => {
+                        const previewScale = (settings.cardHeightMm || 110) > 95 ? 1.0 : 1.25;
+                        return (
+                          <div
+                            className="relative flex items-center justify-center transition-all"
+                            style={{
+                              width: `calc(${settings.cardWidthMm || 80}mm * ${previewScale})`,
+                              height: `calc(${settings.cardHeightMm || 110}mm * ${previewScale})`,
+                            }}
+                          >
+                            <div
+                              style={{
+                                transform: `scale(${previewScale})`,
+                                transformOrigin: 'center center',
+                              }}
+                              className="shadow-md"
+                            >
+                              <IDCardItem
+                                card={activeCard}
+                                settings={settings}
+                                side={activeSide}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="mt-4 text-center">
@@ -855,9 +889,9 @@ export const App: React.FC = () => {
                     onChange={(e) => setPreviewPage(Number(e.target.value))}
                     className="bg-white border border-slate-200 font-bold text-xs text-slate-800 rounded-lg px-2.5 py-1 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
                   >
-                    {cardPages.map((page, idx) => {
-                      const startNum = idx * 4 + 1;
-                      const endNum = Math.min((idx + 1) * 4, cards.length);
+                    {cardPages.map((_page, idx) => {
+                      const startNum = idx * cardsPerPage + 1;
+                      const endNum = Math.min((idx + 1) * cardsPerPage, cards.length);
                       return (
                         <option key={idx} value={idx}>
                           Lembar {idx + 1} dari {cardPages.length} (Kartu #{startNum} - #{endNum})
@@ -880,7 +914,7 @@ export const App: React.FC = () => {
 
                 {/* Quick Info Badge */}
                 <span className="hidden md:inline-block text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                  Menampilkan kartu #{previewPage * 4 + 1} - #{Math.min((previewPage + 1) * 4, cards.length)} dari {cards.length}
+                  Menampilkan kartu #{previewPage * cardsPerPage + 1} - #{Math.min((previewPage + 1) * cardsPerPage, cards.length)} dari {cards.length}
                 </span>
               </div>
 
@@ -910,7 +944,7 @@ export const App: React.FC = () => {
             <div className="flex flex-col items-center gap-8 py-4 overflow-x-auto">
               <div className="flex flex-col items-center gap-2">
                 <span className="text-xs font-bold text-slate-600 bg-white px-3.5 py-1 rounded-full border border-slate-200 shadow-xs">
-                  Pratinjau Lembar {previewPage + 1} dari {cardPages.length} (4 ID Card Lengkap: Depan & Belakang dalam 1 Halaman)
+                  Pratinjau Lembar {previewPage + 1} dari {cardPages.length} ({cardsPerPage} ID Card Lengkap: Depan & Belakang dalam 1 Halaman)
                 </span>
                 <div className="transform scale-[0.65] origin-top sm:scale-[0.75] md:scale-[0.85] lg:scale-[0.95] xl:scale-100 transition-transform">
                   <A4PrintSheet
@@ -965,6 +999,8 @@ export const App: React.FC = () => {
         totalPages={cardPages.length}
         cardPages={cardPages}
         currentPreviewPage={previewPage}
+        cardsPerPage={cardsPerPage}
+        pageOrientation={sheetLayout.isLandscape ? 'landscape' : 'portrait'}
         onConfirmPrint={handleConfirmPrint}
         onPrintPDF={handlePrintPDF}
         isGeneratingPDF={isGeneratingPDF}

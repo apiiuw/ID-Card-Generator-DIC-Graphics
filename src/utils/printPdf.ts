@@ -15,6 +15,7 @@ export async function generateA4LandscapePDF(
   containerElement: HTMLElement,
   options: {
     fileName?: string;
+    orientation?: 'portrait' | 'landscape';
     onProgress?: (progress: PDFGenerationProgress) => void;
   } = {}
 ): Promise<{ blob: Blob; blobUrl: string; pdf: jsPDF }> {
@@ -25,10 +26,14 @@ export async function generateA4LandscapePDF(
     throw new Error('Tidak ada lembar A4 yang ditemukan untuk dicetak.');
   }
 
+  const orientation = options.orientation || 'portrait';
+  const pageW = orientation === 'landscape' ? 297 : 210;
+  const pageH = orientation === 'landscape' ? 210 : 297;
+
   const pdf = new jsPDF({
-    orientation: 'landscape',
+    orientation,
     unit: 'mm',
-    format: 'a4', // [297, 210]
+    format: 'a4',
     compress: true,
   });
 
@@ -55,11 +60,11 @@ export async function generateA4LandscapePDF(
     const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
     if (i > 0) {
-      pdf.addPage('a4', 'landscape');
+      pdf.addPage('a4', orientation);
     }
 
-    // Exact A4 landscape dimensions: 297mm x 210mm
-    pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
+    // Exact A4 dimensions: 210x297mm (portrait) or 297x210mm (landscape)
+    pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
   }
 
   if (options.onProgress) {

@@ -265,14 +265,29 @@ export async function initDatabase() {
       console.log(`✅ MySQL: Folder 'ID Card Kontraktor KRW Terbaru' synced with ${cards.length} cards.`);
     }
 
-    // 5. Seed default settings
-    const [existingSettings] = await conn.query('SELECT id FROM settings WHERE id = "global"');
+    // 5. Seed default settings (80mm x 110mm = 8cm x 11cm)
+    const [existingSettings] = await conn.query('SELECT id, card_width_mm, card_height_mm FROM settings WHERE id = "global"');
     if (existingSettings.length === 0) {
       await conn.query(`
         INSERT INTO settings (id, page_orientation, card_width_mm, card_height_mm, gap_front_back_mm, show_cut_marks, show_fold_marks, margin_mm, gap_x_mm, gap_y_mm, show_page_numbers, card_back_image, dic_logo_url, k3_logo_url)
-        VALUES ('global', 'landscape', 54.00, 86.00, 6.00, 1, 1, 10.00, 16.00, 10.00, 1, '/logos/card-back.png', '/logos/dic-logo.jpg', '/logos/k3-logo.jpg')
+        VALUES ('global', 'portrait', 80.00, 110.00, 4.00, 1, 1, 10.00, 10.00, 10.00, 1, '/logos/card-back.png', '/logos/dic-logo.jpg', '/logos/k3-logo.jpg')
       `);
-      console.log('✅ MySQL: Global print settings initialized.');
+      console.log('✅ MySQL: Global print settings initialized (80x110 mm).');
+    } else if (
+      parseFloat(existingSettings[0].card_width_mm) === 54 &&
+      parseFloat(existingSettings[0].card_height_mm) === 86
+    ) {
+      await conn.query(`
+        UPDATE settings
+        SET page_orientation = 'portrait',
+            card_width_mm = 80.00,
+            card_height_mm = 110.00,
+            gap_front_back_mm = 4.00,
+            gap_x_mm = 10.00,
+            gap_y_mm = 10.00
+        WHERE id = 'global'
+      `);
+      console.log('✅ MySQL: Migrated print settings to 80x110 mm (8x11 cm).');
     }
 
     conn.release();

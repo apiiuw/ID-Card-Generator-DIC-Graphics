@@ -18,27 +18,15 @@
   }
 }
 
-/* Top-level CSS @page rules for desktop browsers (Must be outside @media print for WebKit) */
+/* Top-level CSS @page default (overridden dynamically by App.tsx based on settings.pageOrientation) */
 @page {
-  size: 297mm 210mm;
-  margin: 0mm;
-}
-
-@page :left {
-  size: 297mm 210mm;
-  margin: 0mm;
-}
-
-@page :right {
-  size: 297mm 210mm;
+  size: A4 portrait;
   margin: 0mm;
 }
 
 /* Print Specific Styles */
 @media print {
   html, body {
-    width: 297mm !important;
-    height: 210mm !important;
     background-color: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
@@ -57,7 +45,7 @@
     left: auto !important;
     top: auto !important;
     display: block !important;
-    width: 297mm !important;
+    width: auto !important;
     margin: 0 !important;
     padding: 0 !important;
     pointer-events: auto !important;
@@ -65,12 +53,6 @@
   }
 
   .a4-sheet {
-    width: 297mm !important;
-    height: 210mm !important;
-    min-width: 297mm !important;
-    min-height: 210mm !important;
-    max-width: 297mm !important;
-    max-height: 210mm !important;
     page-break-after: always !important;
     break-after: page !important;
     margin: 0 auto !important;
@@ -86,7 +68,6 @@
     position: fixed;
     left: -99999px;
     top: 0;
-    width: 297mm;
     pointer-events: none;
     z-index: -100;
   }
