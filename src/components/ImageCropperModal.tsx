@@ -7,7 +7,14 @@ interface ImageCropperModalProps {
   imageSrc: string;
   onCropComplete: (croppedDataUrl: string) => void;
   onClose: () => void;
-  aspectRatio?: number; // 3/4 = 0.75 for standard portrait
+  aspectRatio?: number; // 3/4 = 0.75 for standard portrait, 1 for square QR
+  lockAspectRatio?: boolean;
+  title?: string;
+  description?: string;
+  applyLabel?: string;
+  outputWidth?: number;
+  outputHeight?: number;
+  outputFormat?: 'image/jpeg' | 'image/png';
 }
 
 export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
@@ -16,11 +23,25 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   onCropComplete,
   onClose,
   aspectRatio = 3 / 4,
+  lockAspectRatio = false,
+  title = 'Sesuaikan & Crop Foto',
+  description = 'Atur posisi, perbesar, dan potong foto agar rapi dan tidak gepeng pada ID card.',
+  applyLabel = 'Terapkan Foto',
+  outputWidth = 480,
+  outputHeight = 640,
+  outputFormat = 'image/jpeg',
 }) => {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const cropperInstance = useRef<Cropper | null>(null);
   const [selectedRatio, setSelectedRatio] = useState<number | undefined>(aspectRatio);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedRatio(aspectRatio);
+      setScaleX(1);
+    }
+  }, [isOpen, aspectRatio]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -69,13 +90,17 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   const handleApply = () => {
     if (!cropperInstance.current) return;
     const canvas = cropperInstance.current.getCroppedCanvas({
-      width: 480,
-      height: 640,
+      width: outputWidth,
+      height: outputHeight,
+      fillColor: '#ffffff',
       imageSmoothingEnabled: true,
       imageSmoothingQuality: 'high',
     });
     if (canvas) {
-      const croppedUrl = canvas.toDataURL('image/jpeg', 0.92);
+      const croppedUrl =
+        outputFormat === 'image/png'
+          ? canvas.toDataURL('image/png')
+          : canvas.toDataURL('image/jpeg', 0.92);
       onCropComplete(croppedUrl);
       onClose();
     }
@@ -117,10 +142,10 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
         <div>
           <h2 id="cropper-dialog-title" className="text-lg font-bold text-slate-800">
-            Sesuaikan & Crop Foto
+            {title}
           </h2>
           <p className="text-xs text-slate-500">
-            Atur posisi, perbesar, dan potong foto agar rapi dan tidak gepeng pada ID card.
+            {description}
           </p>
         </div>
         <button
@@ -146,42 +171,50 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
 
         {/* Controls Toolbar */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-            <span className="text-xs font-semibold px-2 text-slate-500">Rasio:</span>
-            <button
-              type="button"
-              onClick={() => handleRatioChange(3 / 4)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
-                selectedRatio === 3 / 4
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              3:4 (Pas Foto)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRatioChange(1)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
-                selectedRatio === 1
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              1:1 (Kotak)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRatioChange(undefined)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
-                selectedRatio === undefined
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              Bebas
-            </button>
-          </div>
+          {lockAspectRatio ? (
+            <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-xl">
+              <span className="text-xs font-bold text-blue-700">
+                🔒 Rasio Terkunci 1:1 (Kotak)
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+              <span className="text-xs font-semibold px-2 text-slate-500">Rasio:</span>
+              <button
+                type="button"
+                onClick={() => handleRatioChange(3 / 4)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                  selectedRatio === 3 / 4
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                3:4 (Pas Foto)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRatioChange(1)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                  selectedRatio === 1
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                1:1 (Kotak)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRatioChange(undefined)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
+                  selectedRatio === undefined
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                Bebas
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
             <button
@@ -242,7 +275,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
           className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-colors"
         >
           <Check className="w-4 h-4" />
-          Terapkan Foto
+          {applyLabel}
         </button>
       </div>
     </dialog>

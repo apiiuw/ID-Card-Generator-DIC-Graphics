@@ -49,6 +49,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({
   onApplyTitleToAll,
 }) => {
   const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropTarget, setCropTarget] = useState<'photo' | 'qr'>('photo');
   const [tempImageForCrop, setTempImageForCrop] = useState<string>('');
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const qrInputRef = useRef<HTMLInputElement | null>(null);
@@ -64,6 +65,7 @@ export const CardEditor: React.FC<CardEditorProps> = ({
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
+      setCropTarget('photo');
       setTempImageForCrop(result);
       setCropperOpen(true);
     };
@@ -78,13 +80,9 @@ export const CardEditor: React.FC<CardEditorProps> = ({
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
-      onUpdate({
-        ...card,
-        qrType: 'upload',
-        qrCodeUrl: result,
-        barcodeType: 'upload',
-        barcodeUrl: result,
-      });
+      setCropTarget('qr');
+      setTempImageForCrop(result);
+      setCropperOpen(true);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -384,6 +382,18 @@ export const CardEditor: React.FC<CardEditorProps> = ({
                   <div className="flex items-center gap-1 shrink-0">
                     <button
                       type="button"
+                      onClick={() => {
+                        setCropTarget('qr');
+                        setTempImageForCrop(qrCodeUrl);
+                        setCropperOpen(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 text-[11px] bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded transition-colors"
+                      title="Sesuaikan crop 1:1 gambar QR Code"
+                    >
+                      <Crop className="w-3 h-3" /> Crop
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => qrInputRef.current?.click()}
                       className="px-2.5 py-1 text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded transition-colors"
                     >
@@ -426,12 +436,33 @@ export const CardEditor: React.FC<CardEditorProps> = ({
         imageSrc={tempImageForCrop}
         onClose={() => setCropperOpen(false)}
         onCropComplete={(cropped) => {
-          onUpdate({
-            ...card,
-            photoUrl: cropped,
-          });
+          if (cropTarget === 'qr') {
+            onUpdate({
+              ...card,
+              qrType: 'upload',
+              qrCodeUrl: cropped,
+              barcodeType: 'upload',
+              barcodeUrl: cropped,
+            });
+          } else {
+            onUpdate({
+              ...card,
+              photoUrl: cropped,
+            });
+          }
         }}
-        aspectRatio={3 / 4}
+        aspectRatio={cropTarget === 'qr' ? 1 : 3 / 4}
+        lockAspectRatio={cropTarget === 'qr'}
+        title={cropTarget === 'qr' ? 'Sesuaikan Gambar QR Code (1:1)' : undefined}
+        description={
+          cropTarget === 'qr'
+            ? 'Geser, zoom, atau putar agar area QR Code pas di dalam kotak 1:1'
+            : undefined
+        }
+        applyLabel={cropTarget === 'qr' ? 'Terapkan QR Code' : undefined}
+        outputWidth={cropTarget === 'qr' ? 600 : 480}
+        outputHeight={cropTarget === 'qr' ? 600 : 640}
+        outputFormat={cropTarget === 'qr' ? 'image/png' : 'image/jpeg'}
       />
     </div>
   );
