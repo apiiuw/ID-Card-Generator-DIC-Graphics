@@ -30,6 +30,11 @@ export async function generateA4LandscapePDF(
   const pageW = orientation === 'landscape' ? 297 : 210;
   const pageH = orientation === 'landscape' ? 210 : 297;
 
+  // Wait for custom web fonts (Caladea / Cambria fallback) before measuring & rasterizing
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    await document.fonts.ready;
+  }
+
   const pdf = new jsPDF({
     orientation,
     unit: 'mm',
@@ -55,6 +60,16 @@ export async function generateA4LandscapePDF(
       logging: false,
       backgroundColor: '#ffffff',
       allowTaint: true,
+      scrollX: 0,
+      scrollY: 0,
+      onclone: (clonedDoc) => {
+        const clonedPrintOnly = clonedDoc.querySelector<HTMLElement>('.print-only');
+        if (clonedPrintOnly) {
+          clonedPrintOnly.style.position = 'static';
+          clonedPrintOnly.style.left = '0';
+          clonedPrintOnly.style.top = '0';
+        }
+      },
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.98);
