@@ -193,8 +193,15 @@ export const App: React.FC = () => {
                     : f
                 )
               );
-              if (detailedFolder.cards.length > 0 && !activeCardId) {
-                setActiveCardId(detailedFolder.cards[0].id);
+              if (detailedFolder.cards.length > 0) {
+                setActiveCardId((currentActive) => {
+                  if (currentActive && detailedFolder.cards.some((c) => c.id === currentActive)) {
+                    return currentActive;
+                  }
+                  return detailedFolder.cards[0].id;
+                });
+              } else {
+                setActiveCardId('');
               }
             }
           })
@@ -344,10 +351,13 @@ export const App: React.FC = () => {
 
   const handleCreateFolder = async (newFolder: Folder) => {
     setFolders((prev) => [newFolder, ...prev]);
+    saveFoldersToStorage([newFolder, ...folders]);
     try {
       await createFolderApi(newFolder);
+      setDbConnected(true);
     } catch (err) {
       console.warn('Failed to create folder in MySQL:', err);
+      alert('Peringatan: Gagal menyimpan folder ke database MySQL. Folder disimpan secara lokal.');
     }
     try {
       confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } });
