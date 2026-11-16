@@ -73,7 +73,7 @@ app.get('/api/folders', async (req, res) => {
       'SELECT id, name, description, created_at AS createdAt, updated_at AS updatedAt FROM folders ORDER BY created_at DESC'
     );
 
-    // 2. Get card metadata without huge photo base64 to keep response lightweight and ultra-fast
+    // 2. Get card metadata without huge photo / qr base64 to keep response lightweight and ultra-fast
     const [cards] = await pool.query(
       `SELECT id, folder_id AS folderId, title, name, company, id_label AS idLabel, 
               id_number AS idNumber,
@@ -82,7 +82,12 @@ app.get('/api/folders', async (req, res) => {
                 ELSE photo_url 
               END AS photoUrl,
               code_format AS codeFormat, 
-              qr_type AS qrType, qr_code_url AS qrCodeUrl, color_theme AS colorTheme, sort_order AS sortOrder 
+              qr_type AS qrType, 
+              CASE 
+                WHEN qr_code_url LIKE 'data:%' AND LENGTH(qr_code_url) > 2048 THEN SUBSTRING(qr_code_url, 1, 100)
+                ELSE qr_code_url 
+              END AS qrCodeUrl,
+              color_theme AS colorTheme, sort_order AS sortOrder 
        FROM cards ORDER BY sort_order ASC, created_at ASC`
     );
 
