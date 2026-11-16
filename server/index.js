@@ -73,10 +73,15 @@ app.get('/api/folders', async (req, res) => {
       'SELECT id, name, description, created_at AS createdAt, updated_at AS updatedAt FROM folders ORDER BY created_at DESC'
     );
 
-    // 2. Get all cards
+    // 2. Get card metadata without huge photo base64 to keep response lightweight and ultra-fast
     const [cards] = await pool.query(
       `SELECT id, folder_id AS folderId, title, name, company, id_label AS idLabel, 
-              id_number AS idNumber, photo_url AS photoUrl, code_format AS codeFormat, 
+              id_number AS idNumber,
+              CASE 
+                WHEN photo_url LIKE 'data:%' AND LENGTH(photo_url) > 2048 THEN SUBSTRING(photo_url, 1, 100)
+                ELSE photo_url 
+              END AS photoUrl,
+              code_format AS codeFormat, 
               qr_type AS qrType, qr_code_url AS qrCodeUrl, color_theme AS colorTheme, sort_order AS sortOrder 
        FROM cards ORDER BY sort_order ASC, created_at ASC`
     );
@@ -97,6 +102,36 @@ app.get('/api/folders', async (req, res) => {
   } catch (err) {
     console.error('Get folders error:', err);
     res.status(500).json({ error: 'Gagal mengambil data folder dari database MySQL.' });
+  }
+});
+
+// Get single folder with complete card details (including full photo_url)
+app.get('/api/folders/:id', async (req, res) => {
+  try {
+    const { id: folderId } = req.params;
+    const [folders] = await pool.query(
+      'SELECT id, name, description, created_at AS createdAt, updated_at AS updatedAt FROM folders WHERE id = ? LIMIT 1',
+      [folderId]
+    );
+
+    if (folders.length === 0) {
+      return res.status(404).json({ error: 'Folder tidak ditemukan.' });
+    }
+
+    const folder = folders[0];
+    const [cards] = await pool.query(
+      `SELECT id, folder_id AS folderId, title, name, company, id_label AS idLabel, 
+              id_number AS idNumber, photo_url AS photoUrl, code_format AS codeFormat, 
+              qr_type AS qrType, qr_code_url AS qrCodeUrl, color_theme AS colorTheme, sort_order AS sortOrder 
+       FROM cards WHERE folder_id = ? ORDER BY sort_order ASC, created_at ASC`,
+      [folderId]
+    );
+
+    folder.cards = cards;
+    res.json(folder);
+  } catch (err) {
+    console.error('Get single folder error:', err);
+    res.status(500).json({ error: 'Gagal mengambil data kartu folder.' });
   }
 });
 

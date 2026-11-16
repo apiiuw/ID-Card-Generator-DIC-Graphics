@@ -42,7 +42,7 @@ export const FolderListView: React.FC<FolderListViewProps> = ({
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [folderName, setFolderName] = useState('');
   const [folderDesc, setFolderDesc] = useState('');
-  const [initialTemplate, setInitialTemplate] = useState<'default' | 'empty'>('default');
+  const [initialTemplate, setInitialTemplate] = useState<'empty' | 'default'>('empty');
 
   const filteredFolders = folders.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,7 +54,7 @@ export const FolderListView: React.FC<FolderListViewProps> = ({
     setEditingFolderId(null);
     setFolderName('');
     setFolderDesc('');
-    setInitialTemplate('default');
+    setInitialTemplate('empty');
   };
 
   const openEditModal = (folder: Folder) => {
@@ -402,26 +402,6 @@ export const FolderListView: React.FC<FolderListViewProps> = ({
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <label
                       className={`p-3 border rounded-xl cursor-pointer flex flex-col gap-1 transition-all ${
-                        initialTemplate === 'default'
-                          ? 'border-blue-500 bg-blue-50/50 text-blue-900 font-bold'
-                          : 'border-slate-200 bg-white text-slate-600'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="template"
-                        checked={initialTemplate === 'default'}
-                        onChange={() => setInitialTemplate('default')}
-                        className="sr-only"
-                      />
-                      <span>Isi Template Awal</span>
-                      <span className="text-[10px] font-normal text-slate-500">
-                        Memuat 4 kartu kontraktor contoh PT DIC
-                      </span>
-                    </label>
-
-                    <label
-                      className={`p-3 border rounded-xl cursor-pointer flex flex-col gap-1 transition-all ${
                         initialTemplate === 'empty'
                           ? 'border-blue-500 bg-blue-50/50 text-blue-900 font-bold'
                           : 'border-slate-200 bg-white text-slate-600'
@@ -434,9 +414,29 @@ export const FolderListView: React.FC<FolderListViewProps> = ({
                         onChange={() => setInitialTemplate('empty')}
                         className="sr-only"
                       />
-                      <span>Folder Kosong</span>
+                      <span>Folder Kosong (0 Kartu)</span>
                       <span className="text-[10px] font-normal text-slate-500">
-                        Mulai dari 0 kartu baru
+                        Mulai dari 0 kartu baru bersih
+                      </span>
+                    </label>
+
+                    <label
+                      className={`p-3 border rounded-xl cursor-pointer flex flex-col gap-1 transition-all ${
+                        initialTemplate === 'default'
+                          ? 'border-blue-500 bg-blue-50/50 text-blue-900 font-bold'
+                          : 'border-slate-200 bg-white text-slate-600'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="template"
+                        checked={initialTemplate === 'default'}
+                        onChange={() => setInitialTemplate('default')}
+                        className="sr-only"
+                      />
+                      <span>Isi Contoh (4 Kartu)</span>
+                      <span className="text-[10px] font-normal text-slate-500">
+                        Memuat 4 kartu kontraktor contoh PT DIC
                       </span>
                     </label>
                   </div>

@@ -36,6 +36,14 @@ export async function fetchFolders(): Promise<Folder[]> {
   return await res.json();
 }
 
+export async function fetchFolderDetails(folderId: string): Promise<Folder> {
+  const res = await fetch(`${API_BASE}/folders/${folderId}`);
+  if (!res.ok) {
+    throw new Error('Gagal mengambil detail folder dari MySQL.');
+  }
+  return await res.json();
+}
+
 export async function createFolder(newFolder: Folder): Promise<Folder> {
   const res = await fetch(`${API_BASE}/folders`, {
     method: 'POST',

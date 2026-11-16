@@ -12,6 +12,7 @@ import {
 } from './utils/storage';
 import {
   fetchFolders,
+  fetchFolderDetails,
   createFolder as createFolderApi,
   updateFolder as updateFolderApi,
   deleteFolder as deleteFolderApi,
@@ -176,8 +177,31 @@ export const App: React.FC = () => {
         setActiveCardId('');
       }
       setPreviewPage(0);
+
+      // Fetch complete card details from server if connected (fetches high-res photos)
+      if (activeFolderId && dbConnected) {
+        fetchFolderDetails(activeFolderId)
+          .then((detailedFolder) => {
+            if (detailedFolder && detailedFolder.cards) {
+              setCards(detailedFolder.cards);
+              setFolders((prev) =>
+                prev.map((f) =>
+                  f.id === detailedFolder.id
+                    ? { ...f, cards: detailedFolder.cards, updatedAt: detailedFolder.updatedAt }
+                    : f
+                )
+              );
+              if (detailedFolder.cards.length > 0 && !activeCardId) {
+                setActiveCardId(detailedFolder.cards[0].id);
+              }
+            }
+          })
+          .catch((err) => {
+            console.warn('Failed to fetch detailed folder cards:', err);
+          });
+      }
     }
-  }, [activeFolderId]);
+  }, [activeFolderId, dbConnected]);
 
   // Sync workspace cards changes back to current active folder in folders list
   const updateFolderCards = (newCards: IDCard[]) => {
